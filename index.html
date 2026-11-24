@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EPPP Beta Study Sanctuary | Botanical Study Tracker</title>
+  <!-- Google Fonts: Lora & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['Lora', 'Georgia', 'serif'],
+            sans: ['Plus Jakarta Sans', '-apple-system', 'sans-serif'],
+          },
+          colors: {
+            linen: '#FAF8F5',
+            oatmeal: '#F4EFEA',
+            warmtan: '#E8DFD5',
+            sand: '#DFD4C8',
+            sage: {
+              50: '#F2F5F2',
+              100: '#E3EAE4',
+              200: '#C8D6CA',
+              300: '#A3B8A7',
+              400: '#859F8A',
+              500: '#6B8770',
+              600: '#4B6350',
+              700: '#3B4F3F',
+            },
+            rose: {
+              soft: '#F5EBEB',
+              muted: '#D4A5A5',
+              deep: '#9E6B6B',
+            },
+            bark: '#3B3734',
+            moss: '#6E6862',
+          }
+        }
+      }
+    }
+  </script>
+  <!-- React, ReactDOM, and Babel -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body {
+      background-color: #FAF8F5;
+      color: #3B3734;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    h1, h2, h3, .font-serif {
+      font-family: 'Lora', Georgia, serif;
+    }
+    /* Custom subtle scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #F4EFEA;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #C8D6CA;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #859F8A;
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-sage-200 selection:text-bark">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo } = React;
+
+    // --- BOTANICAL SVG ACCENTS ---
+    const EucalyptusCorner = ({ className = "" }) => (
+      <svg viewBox="0 0 200 200" fill="none" className={className} xmlns="http://www.w3.org/2000/svg">
+        <path d="M18 185C45 140 95 85 175 25" stroke="#859F8A" strokeWidth="1.5" strokeLinecap="round" strokeOpacity="0.45"/>
+        <ellipse cx="52" cy="142" rx="14" ry="8" transform="rotate(-35 52 142)" fill="#A3B8A7" fillOpacity="0.22" stroke="#6B8770" strokeWidth="1" strokeOpacity="0.4"/>
+        <ellipse cx="75" cy="152" rx="13" ry="7.5" transform="rotate(15 75 152)" fill="#C8D6CA" fillOpacity="0.28" stroke="#6B8770" strokeWidth="1" strokeOpacity="0.4"/>
+        <ellipse cx="82" cy="108" rx="15" ry="8.5" transform="rotate(-42 82 108)" fill="#A3B8A7" fillOpacity="0.2" stroke="#6B8770" strokeWidth="1" strokeOpacity="0.4"/>
+        <ellipse cx="108" cy="116" rx="14" ry="8" transform="rotate(12 108 116)" fill="#C8D6CA" fillOpacity="0.25" stroke="#6B8770" strokeWidth="1" strokeOpacity="0.4"/>
+        <ellipse cx="116" cy="74" rx="13" ry="7.5" transform="rotate(-45 116 74)" fill="#A3B8A7" fillOpacity="0.22" stroke="#6B8770" strokeWidth="1" strokeOpacity="0.4"/>
+        <ellipse cx="142" cy="80" rx="12" ry="7" transform="rotate(10 142 80)" fill="#C8D6CA" fillOpacity="0.25" stroke="#6B8770" strokeWidth="1" strokeOpacity="0.4"/>
+        <ellipse cx="152" cy="43" rx="10" ry="6" transform="rotate(-38 152 43)" fill="#A3B8A7" fillOpacity="0.25" stroke="#6B8770" strokeWidth="1" strokeOpacity="0.4"/>
+      </svg>
+    );
+
+    const SmallLeafIcon = ({ className = "w-4 h-4" }) => (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
+        <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />
+        <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" />
+      </svg>
+    );
+
+    // --- DATA DEFINITIONS ---
+    const DOMAINS = [
+      {
+        id: 'ethics',
+        name: 'Ethical & Professional Practice',
+        weight: 20,
+        priority: 'Start First + Weekly Spiral',
+        color: '#4B6350',
+        bgSoft: '#E3EAE4',
+        topics: [
+          'APA Ethics Code (Standards 1–10) & General Principles',
+          'Confidentiality, Privilege & Mandated Reporting (Child/Elder/Tarasoff)',
+          'Informed Consent, Assent & Parental Rights in Schools/Clinics',
+          'Record Keeping, Release of Raw Test Data & Subpoenas',
+          'Multiple Relationships, Boundaries & Telepsychology Risk Management'
+        ]
+      },
+      {
+        id: 'assessment',
+        name: 'Assessment',
+        weight: 20,
+        priority: 'High-Yield School Crossover',
+        color: '#6B8770',
+        bgSoft: '#EDF2EE',
+        topics: [
+          'Cognitive & Intellectual Batteries (WISC-V, WAIS-IV, WJ-IV)',
+          'Behavioral, Adaptive & Social-Emotional Rating Scales',
+          'Personality Assessment (MMPI-3, PAI) & Projective Limitations',
+          'Lifespan Differential Diagnosis (DSM-5-TR Adult & Pediatric)',
+          'Cultural Fairness, Bias, Accommodations & Feedback Delivery'
+        ]
+      },
+      {
+        id: 'intervention',
+        name: 'Intervention',
+        weight: 20,
+        priority: 'Clinical & Psychopharm Depth',
+        color: '#859F8A',
+        bgSoft: '#F2F5F2',
+        topics: [
+          'Evidence-Based Therapies (CBT, ACT, DBT, Psychodynamic, Family)',
+          'Crisis Intervention, Suicide Risk Assessment & Safety Planning',
+          'Psychopharmacology (SSRIs, Stimulants, Antipsychotics, Mood Stabilizers)',
+          'Functional Neuroanatomy & Biological Bases of Behavior',
+          'Prevention, MTSS Tiers & Program Evaluation'
+        ]
+      },
+      {
+        id: 'scientific',
+        name: 'Scientific Orientation to Practice',
+        weight: 15,
+        priority: 'Winter Break Deep Dive',
+        color: '#9C8265',
+        bgSoft: '#F4EFEA',
+        topics: [
+          'Experimental, Quasi-Experimental & Single-Case Designs',
+          'Inferential Statistics, ANOVA, Regression & Effect Sizes',
+          'Psychometrics: Reliability, Validity, SEM & Confidence Intervals',
+          'Test Construction, Item Response Theory & Norming',
+          'Cognitive-Affective Bases (Memory, Learning, Executive Function)'
+        ]
+      },
+      {
+        id: 'interpersonal',
+        name: 'Interpersonal Relationships',
+        weight: 15,
+        priority: 'Multicultural & Systemic Lens',
+        color: '#9E6B6B',
+        bgSoft: '#F5EBEB',
+        topics: [
+          'Therapeutic Alliance, Rupture-Repair & Motivational Interviewing',
+          'Cultural Humility, Identity Development & Intersectionality',
+          'Social Psychology (Attribution, Prejudice, Group Dynamics)',
+          'Lifespan Developmental Theories (Attachment, Moral, Cognitive)',
+          'Organizational Behavior & Workplace Dynamics'
+        ]
+      },
+      {
+        id: 'supervision',
+        name: 'Supervision & Consultation',
+        weight: 10,
+        priority: 'School Consultation Strength',
+        color: '#7A7267',
+        bgSoft: '#EFECE8',
+        topics: [
+          'Models of Clinical Supervision (Developmental, Discrimination)',
+          'Ethical/Legal Vicarious Liability & Gatekeeping in Supervision',
+          'Behavioral, Mental Health & Organizational Consultation Models',
+          'Interprofessional Collaboration in Schools & Healthcare',
+          'Systems Change & Program Consultation'
+        ]
+      }
+    ];
+
+    const TIERS = {
+      tired: {
+        id: 'tired',
+        label: 'Tier 1: Tired / Busy Week',
+        subtitle: 'Maintenance & Momentum • Heavy IEP/Crisis Weeks',
+        targetHours: '7.5 hrs',
+        badgeBg: 'bg-warmtan text-bark border-sand',
+        days: [
+          { day: 'Mon', morning: 'Off (Sleep priority)', evening: '1 hr: 20 practice Qs + rationales', hours: 1.0 },
+          { day: 'Tue', morning: 'Off (Sleep priority)', evening: 'Off (Mental rest / decompression)', hours: 0 },
+          { day: 'Wed', morning: 'Off (Sleep priority)', evening: '1 hr: 15 Ethics spiral Qs + audio notes', hours: 1.0 },
+          { day: 'Thu', morning: 'Off (Sleep priority)', evening: '1 hr: 20 practice Qs + error log', hours: 1.0 },
+          { day: 'Fri', morning: 'Off (Sleep priority)', evening: 'Off (Complete brain break)', hours: 0 },
+          { day: 'Sat', morning: 'Slow morning', evening: '2.5 hrs: 45-question mixed set + review', hours: 2.5 },
+          { day: 'Sun', morning: 'Slow morning', evening: '2 hrs: Light reading + Ethics flashcards', hours: 2.0 },
+        ]
+      },
+      neutral: {
+        id: 'neutral',
+        label: 'Tier 2: Neutral Week',
+        subtitle: 'Steady Core Progress • Standard 8–4 Caseload',
+        targetHours: '13.0 hrs',
+        badgeBg: 'bg-sage-100 text-sage-700 border-sage-200',
+        days: [
+          { day: 'Mon', morning: '15m: 10 Ethics flashcards', evening: '2 hrs: 1h active content + 45m Qs + 15m log', hours: 2.25 },
+          { day: 'Tue', morning: 'Off', evening: '2 hrs: 1h domain study + 1h practice block', hours: 2.0 },
+          { day: 'Wed', morning: '15m: Audio summary', evening: '2 hrs: 45m Ethics spiral + 1h15m core domain', hours: 2.25 },
+          { day: 'Thu', morning: '15m: Error log review', evening: '2 hrs: 1h scenario drills + 1h Qs & rationales', hours: 2.25 },
+          { day: 'Fri', morning: 'Off', evening: 'Off (Complete Friday evening rest)', hours: 0 },
+          { day: 'Sat', morning: 'Slow morning', evening: '2.5 hrs: 75-question mixed block + review', hours: 2.5 },
+          { day: 'Sun', morning: 'Slow morning', evening: '1.75 hrs: Domain summary + weekly planning', hours: 1.75 },
+        ]
+      },
+      productive: {
+        id: 'productive',
+        label: 'Tier 3: Productive Week',
+        subtitle: 'Deep Mastery & Stamina • Lighter Caseload or Break',
+        targetHours: '19.0 hrs',
+        badgeBg: 'bg-rose-soft text-rose-deep border-rose-muted/40',
+        days: [
+          { day: 'Mon', morning: '20m: 15 flashcards', evening: '2.5 hrs: 1.5h deep study + 1h timed Qs', hours: 2.8 },
+          { day: 'Tue', morning: '20m: Missed concepts', evening: '2.5 hrs: 1.5h psychopharm/stats + 1h Qs', hours: 2.8 },
+          { day: 'Wed', morning: '20m: Ethics cases', evening: '2.5 hrs: 1h Ethics spiral + 1.5h vignettes', hours: 2.8 },
+          { day: 'Thu', morning: '20m: Audio notes', evening: '2.5 hrs: 1.5h multi-select drills + 1h log', hours: 2.8 },
+          { day: 'Fri', morning: '15m: Quick quiz', evening: '1.5 hrs: Flashcard creation + weak-area drill', hours: 1.75 },
+          { day: 'Sat', morning: 'Slow morning', evening: '3.5 hrs: Half/Full timed exam simulation', hours: 3.5 },
+          { day: 'Sun', morning: 'Slow morning', evening: '2.5 hrs: Full exam audit + Ethics review', hours: 2.5 },
+        ]
+      }
+    };
+
+    const ROADMAP_WEEKS = [
+      { week: 1, dates: 'Dec 1 – Dec 6, 2026', month: 'December 2026', focus: 'Diagnostic Baseline + Ethical & Professional Practice (Part 1)', ethicsSpiral: 'APA General Principles & Standards 1–3 (Resolving Ethical Issues & Competence)', tag: 'Baseline + Ethics' },
+      { week: 2, dates: 'Dec 7 – Dec 13, 2026', month: 'December 2026', focus: 'Ethical & Professional Practice (Part 2) + Legal Standards', ethicsSpiral: 'Standards 4–10: Confidentiality, Mandated Reporting, Records & Assessment Ethics', tag: 'Core Ethics' },
+      { week: 3, dates: 'Dec 14 – Dec 20, 2026', month: 'December 2026', focus: 'Scientific Orientation: Research Design & Inferential Statistics', ethicsSpiral: '25 Ethics Qs: Informed Consent in Research & Deception Rules', tag: 'Stats & Research' },
+      { week: 4, dates: 'Dec 21 – Dec 27, 2026', month: 'December 2026', focus: 'Scientific Orientation: Psychometrics & Test Construction (Winter Break Push)', ethicsSpiral: '25 Ethics Qs: Test Security, Raw Data Release & Obsolete Tests', tag: 'Winter Break Boost' },
+      { week: 5, dates: 'Dec 28 – Jan 3, 2027', month: 'January 2027', focus: 'Scientific Orientation: Cognitive-Affective & Biological Foundations', ethicsSpiral: '25 Ethics Qs: Telepsychology & Electronic Record Security', tag: 'Winter Break Boost' },
+      { week: 6, dates: 'Jan 4 – Jan 10, 2027', month: 'January 2027', focus: 'Assessment (Part 1): Cognitive, Neuropsychological & Achievement Batteries', ethicsSpiral: '25 Ethics Qs: Cultural Fairness & Interpreting Assessment Results', tag: 'Assessment' },
+      { week: 7, dates: 'Jan 11 – Jan 17, 2027', month: 'January 2027', focus: 'Assessment (Part 2): Personality, Behavioral & Adult Differential Diagnosis', ethicsSpiral: '25 Ethics Qs: Tarasoff Duty to Warn & Imminent Harm Scenarios', tag: 'Assessment' },
+      { week: 8, dates: 'Jan 18 – Jan 24, 2027', month: 'January 2027', focus: 'Intervention (Part 1): Evidence-Based Psychotherapies (CBT, ACT, DBT, Systemic)', ethicsSpiral: '25 Ethics Qs: Multiple Relationships, Gifts & Bartering', tag: 'Intervention' },
+      { week: 9, dates: 'Jan 25 – Jan 31, 2027', month: 'January 2027', focus: 'Intervention (Part 2): Psychopharmacology & Crisis/Suicide Risk Management', ethicsSpiral: '25 Ethics Qs: Involuntary Hospitalization & Minor Consent Rules', tag: 'Intervention' },
+      { week: 10, dates: 'Feb 1 – Feb 7, 2027', month: 'February 2027', focus: 'Interpersonal Relationships (Part 1): Therapeutic Alliance & Multicultural Humility', ethicsSpiral: '25 Ethics Qs: Avoiding Unfair Discrimination & Bias in Practice', tag: 'Interpersonal' },
+      { week: 11, dates: 'Feb 8 – Feb 14, 2027', month: 'February 2027', focus: 'Interpersonal Relationships (Part 2): Social Psychology, Groups & Lifespan Dev', ethicsSpiral: '25 Ethics Qs: Confidentiality in Group, Couples & Family Therapy', tag: 'Interpersonal' },
+      { week: 12, dates: 'Feb 15 – Feb 21, 2027', month: 'February 2027', focus: 'Supervision & Consultation: Clinical Supervision & School/Org Models', ethicsSpiral: '25 Ethics Qs: Supervisory Vicarious Liability & Trainee Evaluation', tag: 'Supervision' },
+      { week: 13, dates: 'Feb 22 – Feb 28, 2027', month: 'February 2027', focus: 'Full-Length Simulation #1 (5-Hour Integrated Exam) + Deep Error Audit', ethicsSpiral: 'Audit all missed Ethics items from Simulation #1 + ASPPB Code review', tag: 'Full Exam #1' },
+      { week: 14, dates: 'Mar 1 – Mar 7, 2027', month: 'March 2027', focus: 'Beta Format Mastery: Extended Multi-Select & Linked Case Vignettes', ethicsSpiral: '30 Ethics Multi-Select Drills: Complex Dual-Role & Subpoena Cases', tag: 'Scenario Drills' },
+      { week: 15, dates: 'Mar 8 – Mar 14, 2027', month: 'March 2027', focus: 'Targeted Remediation: Bottom Two Domains + Psychopharmacology Refresh', ethicsSpiral: '25 Ethics Qs: Advertising, Public Statements & Fee Arrangements', tag: 'Remediation' },
+      { week: 16, dates: 'Mar 15 – Mar 21, 2027', month: 'March 2027', focus: 'Full-Length Simulation #2 (Spring Break / Weekend Stamina Check)', ethicsSpiral: 'Rapid Ethics Code Flashcard Sweep (All 10 Standards)', tag: 'Full Exam #2' },
+      { week: 17, dates: 'Mar 22 – Mar 28, 2027', month: 'March 2027', focus: 'Full-Length Simulation #3 + High-Yield Weak Spot Polishing', ethicsSpiral: 'Final Ethics High-Risk Scenarios (Subpoenas, Child Custody, Boundaries)', tag: 'Full Exam #3' },
+      { week: 18, dates: 'Mar 29 – Apr 2027', month: 'April 2027', focus: '7–10 Day Taper Phase (Drop to Tier 1) → April 2027 Beta Exam Day!', ethicsSpiral: 'Light 15-min morning Ethics principle review; stop heavy studying 48h out', tag: 'Taper & Exam' }
+    ];
+
+    const STORAGE_KEY = 'eppp_botanical_sanctuary_v2';
+
+    function App() {
+      const [activeTab, setActiveTab] = useState('planner');
+      const [selectedWeek, setSelectedWeek] = useState(1);
+      const [selectedTier, setSelectedTier] = useState('neutral');
+
+      // Persistent State
+      const [completedDays, setCompletedDays] = useState({});
+      const [weekSpiralsDone, setWeekSpiralsDone] = useState({});
+      const [weeksDone, setWeeksDone] = useState({});
+      const [domainStats, setDomainStats] = useState(() => {
+        const init = {};
+        DOMAINS.forEach(d => {
+          init[d.id] = { attempted: 0, correct: 0, confidence: 3, notes: '', checkedTopics: {} };
+        });
+        return init;
+      });
+      const [simScores, setSimScores] = useState({ baseline: '', sim1: '', sim2: '', sim3: '' });
+
+      // Load from localStorage
+      useEffect(() => {
+        try {
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed.completedDays) setCompletedDays(parsed.completedDays);
+            if (parsed.weekSpiralsDone) setWeekSpiralsDone(parsed.weekSpiralsDone);
+            if (parsed.weeksDone) setWeeksDone(parsed.weeksDone);
+            if (parsed.domainStats) setDomainStats(parsed.domainStats);
+            if (parsed.simScores) setSimScores(parsed.simScores);
+            if (parsed.selectedWeek) setSelectedWeek(parsed.selectedWeek);
+            if (parsed.selectedTier) setSelectedTier(parsed.selectedTier);
+          }
+        } catch (e) {
+          console.error('Could not load saved tracker state', e);
+        }
+      }, []);
+
+      // Save to localStorage
+      useEffect(() => {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            completedDays,
+            weekSpiralsDone,
+            weeksDone,
+            domainStats,
+            simScores,
+            selectedWeek,
+            selectedTier
+          }));
+        } catch (e) {
+          console.error('Could not save tracker state', e);
+        }
+      }, [completedDays, weekSpiralsDone, weeksDone, domainStats, simScores, selectedWeek, selectedTier]);
+
+      const currentTierObj = TIERS[selectedTier];
+      const currentWeekObj = ROADMAP_WEEKS.find(w => w.week === selectedWeek) || ROADMAP_WEEKS[0];
+
+      // Calculate logged hours for selected week
+      const weekLoggedHours = useMemo(() => {
+        return currentTierObj.days.reduce((sum, d) => {
+          const key = `w${selectedWeek}-${d.day}`;
+          return completedDays[key] ? sum + d.hours : sum;
+        }, 0);
+      }, [completedDays, selectedWeek, currentTierObj]);
+
+      const weekTotalHours = useMemo(() => {
+        return currentTierObj.days.reduce((sum, d) => sum + d.hours, 0);
+      }, [currentTierObj]);
+
+      // Calculate Weighted Readiness Score across 6 Domains
+      const weightedReadiness = useMemo(() => {
+        let totalWeighted = 0;
+        let activeWeight = 0;
+        DOMAINS.forEach(d => {
+          const st = domainStats[d.id] || { attempted: 0, correct: 0, confidence: 3 };
+          if (st.attempted > 0) {
+            const acc = (st.correct / st.attempted) * 100;
+            totalWeighted += acc * (d.weight / 100);
+            activeWeight += d.weight;
+          }
+        });
+        if (activeWeight === 0) return null;
+        return Math.round((totalWeighted / activeWeight) * 100);
+      }, [domainStats]);
+
+      const totalQuestionsDone = useMemo(() => {
+        return Object.values(domainStats).reduce((acc, s) => acc + (Number(s.attempted) || 0), 0);
+      }, [domainStats]);
+
+      const toggleDay = (dayName) => {
+        const key = `w${selectedWeek}-${dayName}`;
+        setCompletedDays(prev => ({ ...prev, [key]: !prev[key] }));
+      };
+
+      const updateDomainStat = (domainId, field, value) => {
+        setDomainStats(prev => ({
+          ...prev,
+          [domainId]: {
+            ...prev[domainId],
+            [field]: value
+          }
+        }));
+      };
+
+      const toggleTopic = (domainId, idx) => {
+        setDomainStats(prev => {
+          const currentTopics = prev[domainId]?.checkedTopics || {};
+          return {
+            ...prev,
+            [domainId]: {
+              ...prev[domainId],
+              checkedTopics: {
+                ...currentTopics,
+                [idx]: !currentTopics[idx]
+              }
+            }
+          };
+        });
+      };
+
+      const handleExportBackup = () => {
+        const dataStr = JSON.stringify({
+          exportedAt: new Date().toISOString(),
+          completedDays,
+          weekSpiralsDone,
+          weeksDone,
+          domainStats,
+          simScores
+        }, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `eppp-sanctuary-backup-${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      const completedWeeksCount = Object.values(weeksDone).filter(Boolean).length;
+
+      return (
+        <div className="min-h-screen bg-linen text-bark relative overflow-x-hidden pb-16">
+          {/* Botanical Watermark Accents */}
+          <EucalyptusCorner className="fixed top-0 right-0 w-64 h-64 pointer-events-none opacity-60 z-0 rotate-180" />
+          <EucalyptusCorner className="fixed bottom-0 left-0 w-72 h-72 pointer-events-none opacity-55 z-0" />
+
+          {/* Header */}
+          <header className="relative z-10 border-b border-warmtan bg-oatmeal/80 backdrop-blur-sm">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sage-100 text-sage-700 text-xs font-medium tracking-wide mb-2 border border-sage-200">
+                  <SmallLeafIcon className="w-3.5 h-3.5 text-sage-600" />
+                  <span>School Psychologist 8–4 Night-Owl Edition • Ethics-First</span>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-serif font-semibold text-bark tracking-tight">
+                  EPPP Beta Study Sanctuary
+                </h1>
+                <p className="text-sm text-moss mt-0.5">
+                  December 1, 2026 – April 2027 • 6 Integrated Competency Domains
+                </p>
+              </div>
+
+              {/* Top Summary Pills & Backup */}
+              <div className="flex flex-wrap items-center gap-2.5">
+                <div className="px-3.5 py-2 rounded-2xl bg-linen border border-warmtan shadow-xs text-center">
+                  <div className="text-[11px] uppercase tracking-wider text-moss font-medium">Weeks Done</div>
+                  <div className="text-base font-serif font-semibold text-sage-600">{completedWeeksCount} / 18</div>
+                </div>
+                <div className="px-3.5 py-2 rounded-2xl bg-linen border border-warmtan shadow-xs text-center">
+                  <div className="text-[11px] uppercase tracking-wider text-moss font-medium">Questions</div>
+                  <div className="text-base font-serif font-semibold text-sage-600">{totalQuestionsDone}</div>
+                </div>
+                <div className="px-3.5 py-2 rounded-2xl bg-linen border border-warmtan shadow-xs text-center">
+                  <div className="text-[11px] uppercase tracking-wider text-moss font-medium">Weighted Acc.</div>
+                  <div className="text-base font-serif font-semibold text-sage-600">
+                    {weightedReadiness !== null ? `${weightedReadiness}%` : '—'}
+                  </div>
+                </div>
+                <button
+                  onClick={handleExportBackup}
+                  title="Download JSON backup of your progress"
+                  className="px-3.5 py-2 rounded-2xl bg-sage-600 hover:bg-sage-700 text-white text-xs font-medium transition shadow-xs cursor-pointer"
+                >
+                  Backup JSON
+                </button>
+              </div>
+            </div>
+
+            {/* Navigation Tabs */}
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 flex gap-2 overflow-x-auto pb-0">
+              {[
+                { id: 'planner', label: '1. Energy-Tier Weekly Planner' },
+                { id: 'domains', label: '2. 6 Beta Domains (Ethics-First)' },
+                { id: 'roadmap', label: '3. 18-Week Roadmap & Exams' }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`px-4 py-2.5 text-sm font-medium rounded-t-2xl border-t border-x transition whitespace-nowrap cursor-pointer ${
+                    activeTab === tab.id
+                      ? 'bg-linen text-sage-700 border-warmtan shadow-2xs font-semibold'
+                      : 'bg-transparent text-moss border-transparent hover:text-bark hover:bg-warmtan/40'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </header>
+
+          {/* Main Content Container */}
+          <main className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-6">
+
+            {/* TAB 1: WEEKLY PLANNER */}
+            {activeTab === 'planner' && (
+              <div className="space-y-6">
+                {/* Week Selector & Energy Tier Switcher */}
+                <div className="bg-oatmeal/90 border border-warmtan rounded-3xl p-5 shadow-xs">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-warmtan">
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-moss mb-1">
+                        Select Study Week
+                      </label>
+                      <select
+                        value={selectedWeek}
+                        onChange={(e) => setSelectedWeek(Number(e.target.value))}
+                        className="bg-linen border border-sand rounded-xl px-3.5 py-2 text-sm font-medium text-bark focus:outline-none focus:ring-2 focus:ring-sage-400"
+                      >
+                        {ROADMAP_WEEKS.map(w => (
+                          <option key={w.week} value={w.week}>
+                            Week {w.week} ({w.dates}) — {w.tag}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* 3 Energy Tiers */}
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      {Object.values(TIERS).map(tier => {
+                        const active = selectedTier === tier.id;
+                        return (
+                          <button
+                            key={tier.id}
+                            onClick={() => setSelectedTier(tier.id)}
+                            className={`px-4 py-2.5 rounded-2xl border text-left transition cursor-pointer ${
+                              active
+                                ? 'bg-sage-600 text-white border-sage-600 shadow-xs'
+                                : 'bg-linen text-bark border-warmtan hover:border-sage-300'
+                            }`}
+                          >
+                            <div className="text-xs font-semibold">{tier.label}</div>
+                            <div className={`text-[11px] ${active ? 'text-sage-100' : 'text-moss'}`}>
+                              Target: {tier.targetHours}/wk
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Current Week Focus & Continuous Ethics Spiral Banner */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                    <div className="bg-linen rounded-2xl p-4 border border-warmtan">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-sage-600">
+                          Week {currentWeekObj.week} Primary Focus
+                        </span>
+                        <span className="text-xs px-2.5 py-0.5 rounded-full bg-sage-100 text-sage-700 font-medium">
+                          {currentWeekObj.dates}
+                        </span>
+                      </div>
+                      <p className="text-sm font-serif font-semibold text-bark mt-1">
+                        {currentWeekObj.focus}
+                      </p>
+                    </div>
+
+                    <div className="bg-rose-soft/65 rounded-2xl p-4 border border-rose-muted/40 flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-xs font-semibold uppercase tracking-wider text-rose-deep mb-1">
+                          Continuous Ethics Spiral Check-In
+                        </div>
+                        <p className="text-xs sm:text-sm text-bark leading-relaxed">
+                          {currentWeekObj.ethicsSpiral}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setWeekSpiralsDone(prev => ({ ...prev, [selectedWeek]: !prev[selectedWeek] }))}
+                        className={`shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold border transition cursor-pointer ${
+                          weekSpiralsDone[selectedWeek]
+                            ? 'bg-sage-600 text-white border-sage-600'
+                            : 'bg-linen text-rose-deep border-rose-muted hover:bg-rose-soft'
+                        }`}
+                      >
+                        {weekSpiralsDone[selectedWeek] ? '✓ Spiral Done' : 'Mark Spiral'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progress Bar for Selected Week */}
+                <div className="bg-linen border border-warmtan rounded-2xl px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <span className="text-sm font-semibold text-bark">{currentTierObj.label}</span>
+                    <span className="text-xs text-moss ml-2">({currentTierObj.subtitle})</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-40 h-2.5 bg-warmtan rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-sage-500 rounded-full transition-all duration-300"
+                        style={{ width: `${Math.min(100, Math.round((weekLoggedHours / weekTotalHours) * 100))}%` }}
+                      />
+                    </div>
+                    <span className="text-xs font-semibold text-sage-700 whitespace-nowrap">
+                      {weekLoggedHours.toFixed(1)} / {weekTotalHours.toFixed(1)} hrs
+                    </span>
+                  </div>
+                </div>
+
+                {/* 7-Day Schedule Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-3">
+                  {currentTierObj.days.map(d => {
+                    const isDone = !!completedDays[`w${selectedWeek}-${d.day}`];
+                    return (
+                      <div
+                        key={d.day}
+                        onClick={() => toggleDay(d.day)}
+                        className={`rounded-2xl p-4 border transition cursor-pointer flex flex-col justify-between ${
+                          isDone
+                            ? 'bg-sage-100/80 border-sage-400 shadow-2xs'
+                            : 'bg-oatmeal/75 border-warmtan hover:border-sage-300'
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="font-serif font-bold text-base text-bark">{d.day}</span>
+                            <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs border ${
+                              isDone
+                                ? 'bg-sage-600 text-white border-sage-600'
+                                : 'bg-linen border-sand text-transparent'
+                            }`}>
+                              ✓
+                            </span>
+                          </div>
+
+                          <div className="space-y-2.5">
+                            <div>
+                              <div className="text-[10px] font-semibold uppercase tracking-wider text-moss">
+                                Morning (Light)
+                              </div>
+                              <p className="text-xs text-bark/90 mt-0.5 leading-snug">{d.morning}</p>
+                            </div>
+                            <div className="pt-2 border-t border-warmtan/80">
+                              <div className="text-[10px] font-semibold uppercase tracking-wider text-sage-700">
+                                Night Focus
+                              </div>
+                              <p className="text-xs text-bark font-medium mt-0.5 leading-snug">{d.evening}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 pt-2 border-t border-warmtan/60 flex items-center justify-between text-[11px] text-moss">
+                          <span>Est. Time</span>
+                          <span className="font-semibold text-bark">{d.hours > 0 ? `${d.hours}h` : 'Rest'}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Night-Owl Evening Flow Reference Card */}
+                <div className="bg-oatmeal/90 border border-warmtan rounded-3xl p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <SmallLeafIcon className="w-4 h-4 text-sage-600" />
+                    <h3 className="font-serif font-semibold text-base text-bark">
+                      Your Night-Owl Evening Flow (After Your 8:00–4:00 School Day)
+                    </h3>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div className="bg-linen rounded-2xl p-3.5 border border-warmtan">
+                      <div className="text-xs font-bold text-sage-700">4:00 – 6:30 PM</div>
+                      <div className="text-xs font-semibold text-bark mt-0.5">School Decompression Buffer</div>
+                      <p className="text-xs text-moss mt-1">No studying right at 4 PM. Dinner, walk, workout, or quiet transition to reset working memory.</p>
+                    </div>
+                    <div className="bg-linen rounded-2xl p-3.5 border border-warmtan">
+                      <div className="text-xs font-bold text-sage-700">6:30 – 8:00 PM</div>
+                      <div className="text-xs font-semibold text-bark mt-0.5">Peak Night Deep Focus</div>
+                      <p className="text-xs text-moss mt-1">Tackle your heaviest cognitive lift: Ethics standards, new domain concepts, or complex vignettes.</p>
+                    </div>
+                    <div className="bg-linen rounded-2xl p-3.5 border border-warmtan">
+                      <div className="text-xs font-bold text-rose-deep">8:00 – 8:15 PM</div>
+                      <div className="text-xs font-semibold text-bark mt-0.5">Screen-Free Tea Reset</div>
+                      <p className="text-xs text-moss mt-1">Step away from screens, stretch, grab herbal tea, and let memory consolidation start.</p>
+                    </div>
+                    <div className="bg-linen rounded-2xl p-3.5 border border-warmtan">
+                      <div className="text-xs font-bold text-sage-700">8:15 – 9:30 PM</div>
+                      <div className="text-xs font-semibold text-bark mt-0.5">Active Recall & Error Log</div>
+                      <p className="text-xs text-moss mt-1">Timed practice questions, reading rationales, and logging why any missed item tripped you up.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 2: 6 BETA DOMAINS */}
+            {activeTab === 'domains' && (
+              <div className="space-y-5">
+                <div className="bg-oatmeal/90 border border-warmtan rounded-3xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h2 className="font-serif font-semibold text-lg text-bark">
+                      Integrated EPPP Beta Blueprint (6 Competency Domains)
+                    </h2>
+                    <p className="text-xs sm:text-sm text-moss mt-0.5">
+                      Ordered with <strong>Ethical &amp; Professional Practice</strong> at the top so you build high-ROI mastery from Week 1 onward.
+                    </p>
+                  </div>
+                  <div className="text-xs bg-linen px-3.5 py-2 rounded-2xl border border-warmtan text-bark">
+                    Target Accuracy Benchmark: <strong className="text-sage-700">72% – 78%+</strong>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {DOMAINS.map((domain, index) => {
+                    const st = domainStats[domain.id] || { attempted: 0, correct: 0, confidence: 3, notes: '', checkedTopics: {} };
+                    const accuracy = st.attempted > 0 ? Math.round((st.correct / st.attempted) * 100) : 0;
+                    const checkedCount = Object.values(st.checkedTopics || {}).filter(Boolean).length;
+
+                    return (
+                      <div
+                        key={domain.id}
+                        className={`rounded-3xl p-5 border transition ${
+                          index === 0
+                            ? 'bg-sage-50/95 border-sage-300 shadow-xs'
+                            : 'bg-oatmeal/85 border-warmtan'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3 mb-3">
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold text-white" style={{ backgroundColor: domain.color }}>
+                                {domain.weight}% Weight
+                              </span>
+                              <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-linen border border-warmtan text-moss">
+                                {domain.priority}
+                              </span>
+                            </div>
+                            <h3 className="font-serif font-semibold text-lg text-bark mt-2">
+                              {index + 1}. {domain.name}
+                            </h3>
+                          </div>
+
+                          <div className="text-right shrink-0">
+                            <div className="text-xl font-serif font-bold text-sage-700">
+                              {st.attempted > 0 ? `${accuracy}%` : '—'}
+                            </div>
+                            <div className="text-[11px] text-moss">Accuracy</div>
+                          </div>
+                        </div>
+
+                        {/* Question & Confidence Inputs */}
+                        <div className="grid grid-cols-3 gap-2.5 bg-linen p-3 rounded-2xl border border-warmtan mb-4">
+                          <div>
+                            <label className="block text-[10px] font-semibold uppercase tracking-wider text-moss mb-1">
+                              Qs Attempted
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={st.attempted || ''}
+                              placeholder="0"
+                              onChange={(e) => updateDomainStat(domain.id, 'attempted', Math.max(0, Number(e.target.value)))}
+                              className="w-full bg-oatmeal border border-sand rounded-xl px-2.5 py-1.5 text-sm font-semibold text-bark focus:outline-none focus:ring-2 focus:ring-sage-400"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-semibold uppercase tracking-wider text-moss mb-1">
+                              Qs Correct
+                            </label>
+                            <input
+                              type="number"
+                              min="0"
+                              max={st.attempted || 9999}
+                              value={st.correct || ''}
+                              placeholder="0"
+                              onChange={(e) => updateDomainStat(domain.id, 'correct', Math.max(0, Number(e.target.value)))}
+                              className="w-full bg-oatmeal border border-sand rounded-xl px-2.5 py-1.5 text-sm font-semibold text-bark focus:outline-none focus:ring-2 focus:ring-sage-400"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] font-semibold uppercase tracking-wider text-moss mb-1">
+                              Confidence (1–5)
+                            </label>
+                            <select
+                              value={st.confidence || 3}
+                              onChange={(e) => updateDomainStat(domain.id, 'confidence', Number(e.target.value))}
+                              className="w-full bg-oatmeal border border-sand rounded-xl px-2 py-1.5 text-sm font-semibold text-bark focus:outline-none focus:ring-2 focus:ring-sage-400"
+                            >
+                              <option value={1}>1 - Needs Work</option>
+                              <option value={2}>2 - Emerging</option>
+                              <option value={3}>3 - Steady</option>
+                              <option value={4}>4 - Strong</option>
+                              <option value={5}>5 - Exam Ready</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Subtopic Checklist */}
+                        <div className="mb-3">
+                          <div className="flex items-center justify-between text-xs font-semibold text-moss mb-1.5">
+                            <span>Key Competency Areas</span>
+                            <span>{checkedCount} / {domain.topics.length} reviewed</span>
+                          </div>
+                          <div className="space-y-1.5">
+                            {domain.topics.map((topic, tIdx) => {
+                              const checked = !!(st.checkedTopics && st.checkedTopics[tIdx]);
+                              return (
+                                <label
+                                  key={tIdx}
+                                  onClick={() => toggleTopic(domain.id, tIdx)}
+                                  className="flex items-start gap-2 text-xs text-bark cursor-pointer hover:text-sage-700"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    onChange={() => {}}
+                                    className="mt-0.5 rounded accent-sage-600 cursor-pointer"
+                                  />
+                                  <span className={checked ? 'line-through text-moss' : ''}>{topic}</span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Error Log / Notes */}
+                        <div>
+                          <label className="block text-[10px] font-semibold uppercase tracking-wider text-moss mb-1">
+                            Error Log &amp; High-Yield Notes
+                          </label>
+                          <textarea
+                            rows="2"
+                            value={st.notes || ''}
+                            onChange={(e) => updateDomainStat(domain.id, 'notes', e.target.value)}
+                            placeholder="Log tricky concepts, missed rationales, or mnemonic cues..."
+                            className="w-full bg-linen border border-warmtan rounded-xl px-3 py-2 text-xs text-bark placeholder:text-moss/60 focus:outline-none focus:ring-2 focus:ring-sage-400"
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: 18-WEEK ROADMAP & FULL EXAMS */}
+            {activeTab === 'roadmap' && (
+              <div className="space-y-6">
+                {/* Practice Simulation Score Log */}
+                <div className="bg-oatmeal/90 border border-warmtan rounded-3xl p-5">
+                  <h2 className="font-serif font-semibold text-lg text-bark mb-1">
+                    Full-Length Practice Exam Log (5-Hour Integrated Format)
+                  </h2>
+                  <p className="text-xs text-moss mb-4">
+                    Track your diagnostic baseline and 3 full-length 215-question practice simulations leading up to April 2027.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    {[
+                      { key: 'baseline', label: 'Diagnostic Baseline', timing: 'Week 1 (Dec 1–4)' },
+                      { key: 'sim1', label: 'Full Simulation #1', timing: 'Week 13 (Late Feb)' },
+                      { key: 'sim2', label: 'Full Simulation #2', timing: 'Week 16 (Mid Mar)' },
+                      { key: 'sim3', label: 'Full Simulation #3', timing: 'Week 17 (Late Mar)' }
+                    ].map(sim => (
+                      <div key={sim.key} className="bg-linen border border-warmtan rounded-2xl p-3.5">
+                        <div className="text-xs font-bold text-bark">{sim.label}</div>
+                        <div className="text-[11px] text-moss mb-2">{sim.timing}</div>
+                        <input
+                          type="text"
+                          value={simScores[sim.key] || ''}
+                          onChange={(e) => setSimScores(prev => ({ ...prev, [sim.key]: e.target.value }))}
+                          placeholder="e.g., 68% or 510"
+                          className="w-full bg-oatmeal border border-sand rounded-xl px-3 py-1.5 text-sm font-semibold text-sage-700 placeholder:text-moss/50 focus:outline-none focus:ring-2 focus:ring-sage-400"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 18-Week Timeline */}
+                <div className="space-y-3">
+                  {ROADMAP_WEEKS.map(w => {
+                    const isWeekComplete = !!weeksDone[w.week];
+                    const isSpiralComplete = !!weekSpiralsDone[w.week];
+                    return (
+                      <div
+                        key={w.week}
+                        className={`rounded-2xl p-4 border transition flex flex-col lg:flex-row lg:items-center justify-between gap-4 ${
+                          isWeekComplete
+                            ? 'bg-sage-100/75 border-sage-400'
+                            : 'bg-oatmeal/80 border-warmtan'
+                        }`}
+                      >
+                        <div className="space-y-1 max-w-3xl">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-serif font-bold text-sm text-sage-700">
+                              Week {w.week}
+                            </span>
+                            <span className="text-xs text-moss">• {w.dates}</span>
+                            <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-linen border border-warmtan text-bark">
+                              {w.tag}
+                            </span>
+                          </div>
+                          <div className="text-sm font-semibold text-bark">{w.focus}</div>
+                          <div className="text-xs text-rose-deep bg-rose-soft/60 inline-block px-2.5 py-1 rounded-lg border border-rose-muted/30">
+                            <strong>Ethics Spiral:</strong> {w.ethicsSpiral}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2 shrink-0">
+                          <button
+                            onClick={() => {
+                              setSelectedWeek(w.week);
+                              setActiveTab('planner');
+                            }}
+                            className="px-3 py-1.5 rounded-xl text-xs font-medium bg-linen border border-sand text-bark hover:border-sage-400 transition cursor-pointer"
+                          >
+                            Open Week
+                          </button>
+                          <button
+                            onClick={() => setWeekSpiralsDone(prev => ({ ...prev, [w.week]: !prev[w.week] }))}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition cursor-pointer ${
+                              isSpiralComplete
+                                ? 'bg-rose-deep text-white border-rose-deep'
+                                : 'bg-linen text-rose-deep border-rose-muted/60 hover:bg-rose-soft'
+                            }`}
+                          >
+                            {isSpiralComplete ? '✓ Spiral' : 'Spiral'}
+                          </button>
+                          <button
+                            onClick={() => setWeeksDone(prev => ({ ...prev, [w.week]: !prev[w.week] }))}
+                            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition cursor-pointer ${
+                              isWeekComplete
+                                ? 'bg-sage-600 text-white border-sage-600'
+                                : 'bg-linen text-sage-700 border-sage-300 hover:bg-sage-50'
+                            }`}
+                          >
+                            {isWeekComplete ? '✓ Week Done' : 'Mark Done'}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </main>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
